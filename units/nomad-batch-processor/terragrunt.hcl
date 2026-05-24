@@ -7,8 +7,6 @@ terraform {
 }
 
 inputs = {
-  kms_key_id = "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"
-
   jobspec_content = <<EOT
 job "batch-processor" {
   datacenters = ["dc1"]

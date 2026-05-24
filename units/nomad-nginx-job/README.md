@@ -35,7 +35,7 @@ nomad job allocs nginx-web
 
 ## Configuration
 
-Update the `kms_key_id` in `terragrunt.hcl` with your AWS KMS key ARN before deploying.
+Set `TOFU_ENCRYPTION_KMS_KEY_ID` in your environment, or override `kms_key_id` in this unit when it needs a dedicated key.
 
 ## Outputs
 

@@ -72,9 +72,10 @@ EOT
 ## Configuration
 
 Update `terragrunt.hcl` with:
-- Your AWS KMS key ARN
 - Actual configuration values for your application
 - Add or remove items as needed
+
+Set `TOFU_ENCRYPTION_KMS_KEY_ID` in your environment, or override `kms_key_id` in this unit when it needs a dedicated key.
 
 ## Security Best Practices
 

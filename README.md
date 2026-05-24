@@ -1,170 +1,148 @@
 # Terragrunt Catalog
 
-A comprehensive Terragrunt configuration catalog for managing Nomad resources on AWS with OpenTofu state encryption.
+A Terragrunt configuration catalog for managing Nomad, Helm, Kubernetes, and Argo CD resources with OpenTofu state encryption.
 
 ## Overview
 
-This repository contains reusable Terraform modules and Terragrunt units for deploying and managing HashiCorp Nomad resources with built-in state encryption using AWS KMS.
+This repository contains reusable Terraform/OpenTofu modules and example Terragrunt units. Modules are intentionally small and resource-focused so a Terragrunt unit can own one clear piece of infrastructure.
 
 ## Features
 
-- **OpenTofu State Encryption**: All modules include AWS KMS encryption for state and plan files
-- **Nomad Provider**: Latest Nomad provider (v2.5.2) with full resource support
-- **AWS Integration**: Designed for AWS deployments with KMS integration
-- **Security Best Practices**: Encrypted secrets, restricted capabilities, and proper IAM policies
-- **Production Ready**: Includes namespace isolation, resource quotas, and monitoring
+- **OpenTofu State Encryption**: Modules include AWS KMS encryption for state and plan files
+- **Nomad Resources**: Jobs, namespaces, variables, and CSI volumes
+- **Helm Resources**: Complete `helm_release` lifecycle and values controls
+- **Kubernetes Resources**: Typed v1 bootstrap resources plus a generic manifest module for CRDs and versioned APIs
+- **Argo CD Resources**: Applications, Application CRD manifests, ApplicationSet CRD manifests, projects, and repositories
+- **Terragrunt Examples**: Units for common Nomad, Helm, Kubernetes, and Argo CD workflows
 
 ## Repository Structure
 
-```
+```text
 .
-├── modules/                  # Reusable Terraform modules
-│   ├── nomad-job/           # Nomad job management
-│   ├── nomad-namespace/     # Nomad namespace management
-│   └── nomad-variable/      # Nomad variable management
-├── units/                    # Example Terragrunt configurations
-│   ├── nomad-nginx-job/              # Simple web service deployment
-│   ├── nomad-production-namespace/   # Production namespace setup
-│   ├── nomad-app-secrets/           # Application configuration
-│   └── nomad-batch-processor/       # Batch job example
-└── terragrunt.hcl           # Root configuration
-
+├── modules/
+│   ├── argocd-application/
+│   ├── argocd-application-manifest/
+│   ├── argocd-application-set-manifest/
+│   ├── argocd-project/
+│   ├── argocd-repository/
+│   ├── helm-release/
+│   ├── kube-config-map-v1/
+│   ├── kube-manifest/
+│   ├── kube-namespace-v1/
+│   ├── kube-secret-v1/
+│   └── nomad-*/
+├── units/
+│   ├── argocd-guestbook-app/
+│   ├── helm-argocd-install/
+│   ├── kube-platform-namespace/
+│   └── nomad-*/
+└── terragrunt.hcl
 ```
 
 ## Modules
 
-### nomad-job
+### Helm
 
-Manages Nomad job lifecycle with support for:
-- HCL and JSON jobspec formats
-- HCL2 variables and templating
-- Configurable timeouts and policies
-- State encryption with AWS KMS
+- [helm-release](modules/helm-release/README.md): manages `helm_release` with release lifecycle, values, sensitive values, write-only values, and post-render support.
 
-[Module Documentation](modules/nomad-job/README.md)
+### Kubernetes
 
-### nomad-namespace
+- [kube-manifest](modules/kube-manifest/README.md): manages any Kubernetes resource through `kubernetes_manifest`.
+- [kube-namespace-v1](modules/kube-namespace-v1/README.md): manages `kubernetes_namespace_v1`.
+- [kube-config-map-v1](modules/kube-config-map-v1/README.md): manages `kubernetes_config_map_v1`.
+- [kube-secret-v1](modules/kube-secret-v1/README.md): manages `kubernetes_secret_v1`, including provider write-only secret inputs.
 
-Creates and manages Nomad namespaces with:
-- Resource quotas
-- Task driver restrictions
-- Network mode controls
-- Custom metadata
-- Node pool configuration (Enterprise)
+### Argo CD
 
-[Module Documentation](modules/nomad-namespace/README.md)
+- [argocd-application](modules/argocd-application/README.md): typed `argocd_application` module with Terragrunt-friendly controls for metadata, destinations, sources, Helm, Kustomize, directory, plugin, sync policy, retry, diffing, and info.
+- [argocd-application-manifest](modules/argocd-application-manifest/README.md): raw Application CRD manifest module for exact API/version control.
+- [argocd-application-set-manifest](modules/argocd-application-set-manifest/README.md): raw ApplicationSet CRD manifest module for complete generator/template/strategy control.
+- [argocd-project](modules/argocd-project/README.md): manages project source, destination, resource, orphaned resource, role, and sync-window controls.
+- [argocd-repository](modules/argocd-repository/README.md): manages Git, Helm, and OCI repositories with common auth modes.
 
-### nomad-variable
+### Nomad
 
-Manages Nomad variables for configuration and secrets with:
-- Namespace support
-- Sensitive data handling
-- KMS-encrypted state storage
-- Integration with Nomad job templates
-
-[Module Documentation](modules/nomad-variable/README.md)
+- [nomad-job](modules/nomad-job/README.md): manages Nomad jobs from HCL or JSON jobspecs.
+- [nomad-namespace](modules/nomad-namespace/README.md): manages Nomad namespaces and capability controls.
+- [nomad-variable](modules/nomad-variable/README.md): manages Nomad variables.
+- [nomad-csi-volume](modules/nomad-csi-volume/README.md): creates CSI volumes.
+- [nomad-csi-volume-registration](modules/nomad-csi-volume-registration/README.md): registers existing CSI volumes.
 
 ## Units
 
-### nomad-nginx-job
-
-Example deployment of an Nginx web service with 3 replicas, health checks, and service discovery.
-
-[Unit Documentation](units/nomad-nginx-job/README.md)
-
-### nomad-production-namespace
-
-Production namespace with security restrictions, compliance metadata, and allowed task drivers.
-
-[Unit Documentation](units/nomad-production-namespace/README.md)
-
-### nomad-app-secrets
-
-Application configuration and secrets management using Nomad variables.
-
-[Unit Documentation](units/nomad-app-secrets/README.md)
-
-### nomad-batch-processor
-
-Parameterized batch processing job for on-demand data processing tasks.
-
-[Unit Documentation](units/nomad-batch-processor/README.md)
+- [helm-argocd-install](units/helm-argocd-install/README.md): installs Argo CD with Helm.
+- [kube-platform-namespace](units/kube-platform-namespace/README.md): creates a platform namespace.
+- [argocd-guestbook-app](units/argocd-guestbook-app/README.md): creates an Argo CD guestbook application.
+- Existing Nomad units show namespace, variable, batch, and service job patterns.
 
 ## Prerequisites
 
-### Required Software
-
-- [Terraform](https://www.terraform.io/downloads.html) >= 1.0 or [OpenTofu](https://opentofu.org/)
+- [OpenTofu](https://opentofu.org/) or Terraform with compatible provider support
 - [Terragrunt](https://terragrunt.gruntwork.io/) >= 0.45.0
-- [Nomad](https://www.nomadproject.io/) cluster (client or server)
-- AWS CLI configured with appropriate credentials
+- AWS credentials with access to the KMS key used for state encryption
+- Optional, based on the units you run:
+  - Nomad cluster and ACL token
+  - Kubernetes cluster and kubeconfig
+  - Argo CD installation and Argo CD provider credentials
 
-### AWS Resources
+## Provider Configuration
 
-- **KMS Key**: Create a KMS key for state encryption
-- **S3 Bucket**: For Terraform state storage
-- **DynamoDB Table**: For state locking
-- **IAM Permissions**: Access to KMS, S3, and DynamoDB
+The root `terragrunt.hcl` generates provider blocks for AWS, Nomad, Kubernetes, Helm, and Argo CD.
 
-### Nomad Setup
+```bash
+export ENVIRONMENT="production"
+export AWS_REGION="us-east-1"
+export AWS_PROFILE="default"
 
-- Nomad cluster deployed and accessible
-- ACL tokens configured (recommended for production)
-- Docker driver enabled on Nomad clients
-- Consul for service discovery (optional)
+export TOFU_ENCRYPTION_KMS_KEY_ID="arn:aws:kms:us-east-1:123456789012:key/example"
+export TOFU_ENCRYPTION_KMS_REGION="us-east-1"
+export TOFU_ENCRYPTION_KMS_KEY_SPEC="AES_256"
+
+export NOMAD_ADDR="https://nomad.example.com:4646"
+export NOMAD_TOKEN="your-nomad-acl-token" # checkov:skip=CKV_SECRET_6: Not a real secret
+
+export KUBE_CONFIG_PATH="$HOME/.kube/config"
+export KUBE_CTX="production"
+
+export ARGOCD_SERVER="argocd.example.com:443"
+export ARGOCD_AUTH_TOKEN="your-argocd-token" # checkov:skip=CKV_SECRET_6: Not a real secret
+```
+
+The Argo CD provider block is intentionally empty so the provider can use its supported `ARGOCD_*` environment variables, local config, port-forward, or core mode without forcing one auth model into every unit.
 
 ## Quick Start
 
-### 1. Configure Environment
+### Install Argo CD With Helm
 
 ```bash
-# Set Nomad connection details
-export NOMAD_ADDR="https://nomad.example.com:4646"
-export NOMAD_TOKEN="your-nomad-acl-token" # checkov:skip=CKV_SECRET_6: Not a real secret
-export ENVIRONMENT="production"
-
-# Set AWS credentials
-export AWS_REGION="us-east-1"
-export AWS_PROFILE="default"
-```
-
-### 2. Update Root Configuration
-
-Edit `terragrunt.hcl` and update:
-- S3 bucket name
-- DynamoDB table name
-- KMS key ARN
-- AWS region
-
-### 3. Deploy a Namespace
-
-```bash
-cd units/nomad-production-namespace
+cd units/helm-argocd-install
 terragrunt init
 terragrunt plan
 terragrunt apply
 ```
 
-### 4. Configure Application Secrets
+### Create A Kubernetes Namespace
 
 ```bash
-cd ../nomad-app-secrets
-# Update terragrunt.hcl with your configuration
+cd ../kube-platform-namespace
 terragrunt init
 terragrunt apply
 ```
 
-### 5. Deploy a Job
+### Create An Argo CD Application
 
 ```bash
-cd ../nomad-nginx-job
+cd ../argocd-guestbook-app
 terragrunt init
 terragrunt plan
 terragrunt apply
-
-# Verify deployment
-nomad job status nginx-web
 ```
+
+## Argo CD Application Control
+
+Use `argocd-application` when the typed Argo CD provider schema is enough and you want clearer Terraform plans. Use `argocd-application-manifest` when you need exact CRD control over any field supported by the installed Argo CD version. This gives Terragrunt a structured path and a raw-manifest path for the same resource.
+
+For ApplicationSets, the catalog uses `argocd-application-set-manifest` because the ApplicationSet API is broad and changes quickly. Passing the complete `spec` through Terragrunt avoids losing access to new generator or strategy fields.
 
 ## OpenTofu Encryption
 
@@ -175,7 +153,8 @@ terraform {
   encryption {
     key_provider "aws_kms" "main" {
       kms_key_id = var.kms_key_id
-      key_spec   = "AES_256"
+      key_spec   = var.kms_key_spec
+      region     = var.kms_region
     }
 
     method "aes_gcm" "main" {
@@ -195,138 +174,47 @@ terraform {
 }
 ```
 
-### Benefits
+The root Terragrunt configuration supplies these encryption inputs to every unit:
 
-- **State Protection**: Terraform state files are encrypted at rest
-- **Plan Security**: Plan files containing sensitive data are encrypted
-- **Compliance**: Meets security requirements for sensitive infrastructure
-- **Key Management**: Centralized key management through AWS KMS
-- **Audit Trail**: KMS provides audit logging for key usage
+- `kms_key_id`: from `TOFU_ENCRYPTION_KMS_KEY_ID`
+- `kms_region`: from `TOFU_ENCRYPTION_KMS_REGION`, defaulting to `AWS_REGION`
+- `kms_key_spec`: from `TOFU_ENCRYPTION_KMS_KEY_SPEC`, defaulting to `AES_256`
+
+Individual units can still override any of these inputs when they need a different key, region, or key spec.
+
+For advanced migrations, fallbacks, or non-AWS key providers, use OpenTofu's `TF_ENCRYPTION` environment configuration to merge or override the code-based configuration.
 
 ## Security Considerations
 
-### State File Security
-
-- State files contain sensitive information and are encrypted with KMS
-- Store state files in S3 with encryption and versioning enabled
-- Use IAM policies to restrict access to state buckets
-- Enable S3 bucket logging for audit trails
-
-### Nomad Variables
-
-- Use Nomad variables for configuration, not highly sensitive secrets
-- For passwords and API keys, consider AWS Secrets Manager or Vault
-- Restrict access using Nomad ACL policies
-- Rotate credentials regularly
-
-### IAM Permissions
-
-Required IAM permissions for KMS:
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "kms:Encrypt",
-        "kms:Decrypt",
-        "kms:DescribeKey",
-        "kms:GenerateDataKey"
-      ],
-      "Resource": "arn:aws:kms:REGION:ACCOUNT:key/KEY-ID"
-    }
-  ]
-}
-```
-
-### Network Security
-
-- Use TLS for Nomad connections
-- Enable ACLs on Nomad clusters
-- Use security groups to restrict access
-- Consider using mTLS for Nomad communication
-
-## Common Workflows
-
-### Creating a New Application
-
-1. Create namespace (if not exists)
-2. Configure variables for the application
-3. Deploy the Nomad job
-4. Verify service registration
-5. Set up monitoring and alerting
-
-### Updating a Job
-
-```bash
-cd units/your-job
-# Edit terragrunt.hcl with changes
-terragrunt plan
-terragrunt apply
-
-# Monitor the update
-nomad job status your-job
-```
-
-### Managing Secrets
-
-```bash
-cd units/nomad-app-secrets
-# Update items in terragrunt.hcl
-terragrunt apply
-
-# Jobs using these variables will need to be restarted
-nomad job restart -namespace=production your-job
-```
+- State files can contain rendered Helm manifests, Kubernetes Secret values, Argo CD repository credentials, and Nomad variables. Keep KMS encryption enabled.
+- Store remote state in an encrypted S3 bucket with DynamoDB locking and restrictive IAM policies.
+- Prefer provider write-only inputs for Helm values and Kubernetes Secret values when the provider supports them.
+- Keep Argo CD repository credentials project-scoped where possible.
+- Install CRDs in a separate step before planning resources that depend on them.
 
 ## Troubleshooting
+
+### Kubernetes Manifest Planning Fails
+
+`kubernetes_manifest` needs API server access at plan time and validates resource schemas. Make sure the cluster is reachable and CRDs are already installed.
+
+### Argo CD Provider Authentication Fails
+
+Verify the same auth path works with the Argo CD CLI first, then mirror it through `ARGOCD_*` environment variables or local Argo CD config.
 
 ### KMS Access Denied
 
 ```bash
-# Verify KMS permissions
 aws kms describe-key --key-id your-key-id
-
-# Check IAM role/user has correct permissions
-aws iam get-role-policy --role-name your-role --policy-name your-policy
 ```
 
-### Nomad Connection Issues
-
-```bash
-# Verify Nomad is accessible
-nomad status
-
-# Check ACL token
-nomad acl token self
-
-# Test connection
-curl -H "X-Nomad-Token: $NOMAD_TOKEN" $NOMAD_ADDR/v1/status/leader
-```
-
-### State Locking Errors
-
-```bash
-# Force unlock if needed (use with caution)
-terragrunt force-unlock LOCK_ID
-```
-
-## Contributing
-
-When adding new modules or units:
-
-1. Include OpenTofu encryption configuration
-2. Document all variables and outputs
-3. Provide a comprehensive README
-4. Include security considerations
-5. Add example usage
+The identity running Terragrunt needs `kms:Encrypt`, `kms:Decrypt`, `kms:DescribeKey`, and `kms:GenerateDataKey` on the configured key.
 
 ## Resources
 
 - [Nomad Documentation](https://www.nomadproject.io/docs)
-- [Terraform Nomad Provider](https://registry.terraform.io/providers/hashicorp/nomad/latest/docs)
+- [Helm Provider](https://registry.terraform.io/providers/hashicorp/helm/latest/docs)
+- [Kubernetes Provider](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs)
+- [Argo CD Provider](https://registry.terraform.io/providers/argoproj-labs/argocd/latest/docs)
 - [OpenTofu Encryption](https://opentofu.org/docs/language/state/encryption/)
-- [AWS KMS Documentation](https://docs.aws.amazon.com/kms/)
 - [Terragrunt Documentation](https://terragrunt.gruntwork.io/docs/)
