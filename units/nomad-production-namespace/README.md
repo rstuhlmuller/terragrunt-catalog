@@ -40,9 +40,10 @@ nomad namespace status production
 ## Configuration
 
 Update the following in `terragrunt.hcl`:
-- `kms_key_id`: Your AWS KMS key ARN
 - `meta`: Update with your organization's metadata
 - `capabilities`: Adjust based on your security requirements
+
+Set `TOFU_ENCRYPTION_KMS_KEY_ID` in your environment, or override `kms_key_id` in this unit when it needs a dedicated key.
 
 ## Integration
 
