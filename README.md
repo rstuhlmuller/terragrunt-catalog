@@ -1,6 +1,6 @@
 # Terragrunt Catalog
 
-A Terragrunt configuration catalog for managing Nomad, Helm, Kubernetes, and Argo CD resources with OpenTofu state encryption.
+A Terragrunt configuration catalog for managing Nomad, Helm, Kubernetes, Argo CD, AWS secret bootstrap, and AzureAD application resources with OpenTofu state encryption.
 
 ## Overview
 
@@ -13,6 +13,8 @@ This repository contains reusable Terraform/OpenTofu modules and example Terragr
 - **Helm Resources**: Complete `helm_release` lifecycle and values controls
 - **Kubernetes Resources**: Typed v1 bootstrap resources plus a generic manifest module for CRDs and versioned APIs
 - **Argo CD Resources**: Applications, Application CRD manifests, ApplicationSet CRD manifests, projects, and repositories
+- **AWS Secret Bootstrap**: SSM SecureString parameters and Kubernetes Secrets sourced from SSM
+- **AzureAD Applications**: Application registrations, application passwords, and service principals
 - **Terragrunt Examples**: Units for common Nomad, Helm, Kubernetes, and Argo CD workflows
 
 ## Repository Structure
@@ -25,8 +27,13 @@ This repository contains reusable Terraform/OpenTofu modules and example Terragr
 │   ├── argocd-application-set-manifest/
 │   ├── argocd-project/
 │   ├── argocd-repository/
+│   ├── aws-ssm-parameters/
+│   ├── azuread-application/
+│   ├── azuread-application-password/
+│   ├── azuread-service-principal/
 │   ├── helm-release/
 │   ├── kube-config-map-v1/
+│   ├── kubernetes-secret-from-ssm/
 │   ├── kube-manifest/
 │   ├── kube-namespace-v1/
 │   ├── kube-secret-v1/
@@ -51,6 +58,11 @@ This repository contains reusable Terraform/OpenTofu modules and example Terragr
 - [kube-namespace-v1](modules/kube-namespace-v1/README.md): manages `kubernetes_namespace_v1`.
 - [kube-config-map-v1](modules/kube-config-map-v1/README.md): manages `kubernetes_config_map_v1`.
 - [kube-secret-v1](modules/kube-secret-v1/README.md): manages `kubernetes_secret_v1`, including provider write-only secret inputs.
+- [kubernetes-secret-from-ssm](modules/kubernetes-secret-from-ssm/README.md): creates `kubernetes_secret_v1` data from encrypted AWS SSM parameters.
+
+### AWS
+
+- [aws-ssm-parameters](modules/aws-ssm-parameters/README.md): manages SSM SecureString parameters, optional KMS key creation, and optional IAM reader access.
 
 ### Argo CD
 
@@ -59,6 +71,12 @@ This repository contains reusable Terraform/OpenTofu modules and example Terragr
 - [argocd-application-set-manifest](modules/argocd-application-set-manifest/README.md): raw ApplicationSet CRD manifest module for complete generator/template/strategy control.
 - [argocd-project](modules/argocd-project/README.md): manages project source, destination, resource, orphaned resource, role, and sync-window controls.
 - [argocd-repository](modules/argocd-repository/README.md): manages Git, Helm, and OCI repositories with common auth modes.
+
+### AzureAD
+
+- [azuread-application](modules/azuread-application/README.md): manages AzureAD application registrations, redirect URIs, app roles, required resource access, optional claims, and optional inline passwords.
+- [azuread-application-password](modules/azuread-application-password/README.md): manages generated client secrets for AzureAD applications.
+- [azuread-service-principal](modules/azuread-service-principal/README.md): manages service principals linked to AzureAD applications.
 
 ### Nomad
 
@@ -84,10 +102,11 @@ This repository contains reusable Terraform/OpenTofu modules and example Terragr
   - Nomad cluster and ACL token
   - Kubernetes cluster and kubeconfig
   - Argo CD installation and Argo CD provider credentials
+  - Azure tenant credentials for AzureAD application modules
 
 ## Provider Configuration
 
-The root `terragrunt.hcl` generates provider blocks for AWS, Nomad, Kubernetes, Helm, and Argo CD.
+The root `terragrunt.hcl` generates provider blocks for AWS, Nomad, Kubernetes, Helm, Argo CD, and AzureAD.
 
 ```bash
 export ENVIRONMENT="production"
@@ -106,9 +125,15 @@ export KUBE_CTX="production"
 
 export ARGOCD_SERVER="argocd.example.com:443"
 export ARGOCD_AUTH_TOKEN="your-argocd-token" # checkov:skip=CKV_SECRET_6: Not a real secret
+
+export ARM_TENANT_ID="00000000-0000-0000-0000-000000000000"
+export ARM_CLIENT_ID="00000000-0000-0000-0000-000000000000"
+export ARM_CLIENT_SECRET="example-client-secret" # checkov:skip=CKV_SECRET_6: Not a real secret
 ```
 
 The Argo CD provider block is intentionally empty so the provider can use its supported `ARGOCD_*` environment variables, local config, port-forward, or core mode without forcing one auth model into every unit.
+
+The AzureAD provider block is also intentionally empty so the provider can use Azure CLI, workload identity, or `ARM_*` environment variables depending on the runner.
 
 ## Quick Start
 
@@ -186,7 +211,7 @@ For advanced migrations, fallbacks, or non-AWS key providers, use OpenTofu's `TF
 
 ## Security Considerations
 
-- State files can contain rendered Helm manifests, Kubernetes Secret values, Argo CD repository credentials, and Nomad variables. Keep KMS encryption enabled.
+- State files can contain rendered Helm manifests, Kubernetes Secret values, SSM parameter placeholders, Argo CD repository credentials, AzureAD application passwords, and Nomad variables. Keep KMS encryption enabled.
 - Store remote state in an encrypted S3 bucket with DynamoDB locking and restrictive IAM policies.
 - Prefer provider write-only inputs for Helm values and Kubernetes Secret values when the provider supports them.
 - Keep Argo CD repository credentials project-scoped where possible.
@@ -215,6 +240,8 @@ The identity running Terragrunt needs `kms:Encrypt`, `kms:Decrypt`, `kms:Describ
 - [Nomad Documentation](https://www.nomadproject.io/docs)
 - [Helm Provider](https://registry.terraform.io/providers/hashicorp/helm/latest/docs)
 - [Kubernetes Provider](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs)
+- [AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 - [Argo CD Provider](https://registry.terraform.io/providers/argoproj-labs/argocd/latest/docs)
+- [AzureAD Provider](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs)
 - [OpenTofu Encryption](https://opentofu.org/docs/language/state/encryption/)
 - [Terragrunt Documentation](https://terragrunt.gruntwork.io/docs/)

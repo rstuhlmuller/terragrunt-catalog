@@ -79,6 +79,8 @@ ${local.helm_context_line}  }
 }
 
 provider "argocd" {}
+
+provider "azuread" {}
 EOF
 }
 
